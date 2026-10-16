@@ -69,7 +69,7 @@ Por que não depende do modelo: `tool_confirmation` só é preenchido pelo ADK q
 ### Garantia 2: cada sessão pertence a um apartamento
 
 - `aurora/api.py`, `criar_sessao`: o apartamento é gravado uma única vez, no `state` da sessão (`state={"apartamento": apartamento}`) e no registro `db.registrar_sessao`. Nenhuma rota permite alterar esse valor depois.
-- `aurora/tools.py`, `_apartamento_da_sessao`: única fonte do apartamento das tools. Ele lê o dono registrado para `tool_context.session.id` e exige que o `state` bata com esse registro.
+- `aurora/tools.py`, `_apartamento_da_sessao`: única fonte do apartamento das tools. Ele lê o dono registrado para a sessão (`tool_context.session`) e exige que o `state` bata com esse registro.
 - **Nenhuma tool recebe apartamento como parâmetro.** `listar_minhas_reservas`, `reservar_area`, `cancelar_reserva`, `listar_meus_visitantes` e `autorizar_visitante` usam o apartamento da sessão. As consultas em `aurora/db.py` filtram com `WHERE apartamento = ?`.
 - `aurora/db.py`, `cancelar_reserva`: só encontra reservas do próprio apartamento. Pedir para cancelar a reserva de outro apartamento devolve `nao_encontrada`, sem código nem dono.
 - `aurora/tools.py`, `verificar_disponibilidade` e `aurora/db.py`, `data_ocupada`: devolvem só `livre`/`ocupada`, nunca quem reservou. `reservar_area` também responde só `indisponivel` quando a data já tem dono.
@@ -90,7 +90,7 @@ Por que não depende do modelo: tudo é lido do disco a cada requisição. Nenhu
 - `aurora/regulamento.py`, `consultar`: divide `dados/regulamento.md` em capítulos e artigos, pontua os capítulos pelas palavras da pergunta e escolhe **um único capítulo**. Devolve só os artigos dele que tratam da pergunta (até 3). Trechos de outros capítulos nunca saem dessa função.
 - `aurora/tools.py`, `consultar_regulamento`: é a única tool que acessa o regulamento, e só o `especialista_regulamento` a recebe.
 - `aurora/agents.py`, `tools=[AgentTool(agent=especialista_regulamento)]`: o especialista roda numa sessão própria, em memória. A chamada a `consultar_regulamento` e os artigos devolvidos ficam lá. Na sessão do morador entram só a chamada ao `especialista_regulamento` e a resposta curta dele.
-- `aurora/agents.py`, `assistente_aurora.instruction`: não contém o regulamento, só diz para encaminhar dúvidas ao especialista.
+- `aurora/agents.py`, `assistente_aurora` (parâmetro `instruction`): não contém o regulamento, só diz para encaminhar dúvidas ao especialista.
 
 Por que não depende do modelo: o recorte é feito em Python, antes de qualquer texto chegar ao modelo. Mesmo o especialista só vê os artigos de um capítulo, e o histórico da conversa nunca recebe esses artigos.
 
